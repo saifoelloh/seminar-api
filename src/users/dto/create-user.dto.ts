@@ -6,12 +6,12 @@ export class CreateUserDto {
   readonly id?: string;
 
   @IsString()
-  @Length(6, 15)
+  @Length(3, 30)
   readonly name: string;
 
   @IsString()
   @IsEmail()
-  @Length(8, 20)
+  @Length(5, 25)
   readonly email: string;
 
   @IsString()
