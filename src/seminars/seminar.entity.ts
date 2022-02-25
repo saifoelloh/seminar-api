@@ -4,7 +4,7 @@ import { Column, Entity, ManyToOne } from 'typeorm';
 
 @Entity()
 export class Seminar extends BaseEntity {
-  @Column({ type: 'varchar', length: 15, unique: true, nullable: false })
+  @Column({ type: 'varchar', length: 25, unique: true, nullable: false })
   name: string;
 
   @Column({ type: 'date', nullable: false })

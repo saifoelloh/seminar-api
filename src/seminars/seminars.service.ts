@@ -1,4 +1,50 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PaginationDto } from 'src/dto/pagination.dto';
+import { Repository } from 'typeorm';
+import { SelectSeminarDto } from './dto/select-seminar.dto';
+import { UpdateSeminarDto } from './dto/update-seminar.dto';
+import { Seminar } from './seminar.entity';
 
 @Injectable()
-export class SeminarsService {}
+export class SeminarsService {
+  constructor(
+    @InjectRepository(Seminar)
+    private seminarRepository: Repository<Seminar>,
+  ) {}
+
+  async findAll(paginationDto: PaginationDto<Seminar>): Promise<Seminar[]> {
+    const {
+      page = 0,
+      show = 5,
+      sortBy = 'asc',
+      orderBy = 'createdAt',
+    } = paginationDto;
+    const users = await this.seminarRepository.find({
+      skip: page * show,
+      take: show,
+      order: { [orderBy]: sortBy },
+    });
+
+    return users;
+  }
+
+  async findOneBy(conditions: SelectSeminarDto): Promise<Seminar> {
+    const seminar = await this.seminarRepository.findOne({
+      where: { ...conditions },
+    });
+
+    return seminar;
+  }
+
+  async updateBy(
+    conditions: SelectSeminarDto,
+    user: UpdateSeminarDto,
+  ): Promise<void> {
+    await this.seminarRepository.update({ ...conditions }, user);
+  }
+
+  async deleteBy(conditions: SelectSeminarDto): Promise<void> {
+    await this.seminarRepository.delete({ ...conditions });
+  }
+}
