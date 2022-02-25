@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { Repository } from 'typeorm';
+import { FindOneOptions, JoinOptions, Repository } from 'typeorm';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -38,9 +38,13 @@ export class UsersService {
     return users;
   }
 
-  async findOneBy(conditions: SelectUserDto): Promise<User> {
+  async findOneBy(
+    conditions: SelectUserDto,
+    findOneOptions?: FindOneOptions<User>,
+  ): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { ...conditions },
+      ...findOneOptions,
     });
 
     return user;
