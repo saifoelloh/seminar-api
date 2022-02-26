@@ -33,6 +33,7 @@ export class UsersService {
       skip: page * show,
       take: show,
       order: { [orderBy]: sortBy },
+      relations: ['seminars'],
     });
 
     return users;
