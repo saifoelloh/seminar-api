@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/dto/pagination.dto';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { Repository } from 'typeorm';
+import { CreateSeminarDto } from './dto/create-seminar.dto';
 import { SelectSeminarDto } from './dto/select-seminar.dto';
 import { UpdateSeminarDto } from './dto/update-seminar.dto';
 import { Seminar } from './seminar.entity';
@@ -12,6 +14,14 @@ export class SeminarsService {
     @InjectRepository(Seminar)
     private seminarRepository: Repository<Seminar>,
   ) {}
+
+  async create(data: CreateSeminarDto, user: CreateUserDto): Promise<Seminar> {
+    const result = await this.seminarRepository.save({
+      ...data,
+      user,
+    });
+    return result;
+  }
 
   async findAll(paginationDto: PaginationDto<Seminar>): Promise<Seminar[]> {
     const {
@@ -24,6 +34,7 @@ export class SeminarsService {
       skip: page * show,
       take: show,
       order: { [orderBy]: sortBy },
+      relations: ['user'],
     });
 
     return users;
