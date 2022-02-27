@@ -57,9 +57,9 @@ export class SeminarsController {
   }
 
   @UseGuards(JwtGuard)
-  @Patch(':userId')
+  @Patch(':seminarId')
   async updateById(
-    @Param('userId') seminarId: string,
+    @Param('seminarId') seminarId: string,
     @Body() body: UpdateSeminarDto,
     @Req() req: any,
   ): Promise<void> {
@@ -80,5 +80,21 @@ export class SeminarsController {
     if (seminar.user.id !== req.user.id) throw new UnauthorizedException();
 
     await this.seminarService.deleteBy({ id: seminarId });
+  }
+
+  @UseGuards(JwtGuard)
+  @Post(':seminarId/enroll')
+  async enrollSeminar(@Param('seminarId') seminarId: string, @Req() req: any) {
+    const seminar = await this.seminarService.findOneBy({ id: seminarId });
+    if (_.isEmpty(seminar)) throw new NotFoundException('User not found');
+
+    if (
+      seminar.user.id === req.user.id &&
+      seminar.attendance.length < seminar.quota
+    )
+      throw new UnauthorizedException();
+
+    const result = await this.seminarService.enrollSeminar(seminar, req.user);
+    return result;
   }
 }

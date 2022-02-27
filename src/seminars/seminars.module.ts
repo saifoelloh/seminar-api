@@ -25,6 +25,7 @@ export class SeminarsModule implements NestModule {
       .exclude(
         { path: 'seminars', method: RequestMethod.GET },
         { path: 'seminars/:seminarId', method: RequestMethod.GET },
-      );
+      )
+      .forRoutes(SeminarsController);
   }
 }

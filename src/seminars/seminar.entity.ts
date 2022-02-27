@@ -1,6 +1,6 @@
 import { BaseEntity } from 'src/helpers/base.entity';
 import { User } from 'src/users/user.entity';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 
 @Entity()
 export class Seminar extends BaseEntity {
@@ -15,4 +15,8 @@ export class Seminar extends BaseEntity {
 
   @ManyToOne(() => User, (user) => user.seminars)
   user: User;
+
+  @ManyToMany(() => User)
+  @JoinTable()
+  attendance: User[];
 }

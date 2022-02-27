@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/dto/pagination.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { User } from 'src/users/user.entity';
 import { Repository } from 'typeorm';
 import { CreateSeminarDto } from './dto/create-seminar.dto';
 import { SelectSeminarDto } from './dto/select-seminar.dto';
@@ -43,6 +44,7 @@ export class SeminarsService {
   async findOneBy(conditions: SelectSeminarDto): Promise<Seminar> {
     const seminar = await this.seminarRepository.findOne({
       where: { ...conditions },
+      relations: ['user', 'attendance'],
     });
 
     return seminar;
@@ -57,5 +59,11 @@ export class SeminarsService {
 
   async deleteBy(conditions: SelectSeminarDto): Promise<void> {
     await this.seminarRepository.delete({ ...conditions });
+  }
+
+  async enrollSeminar(seminar: Seminar, attendance: User) {
+    seminar.attendance = [attendance];
+    const result = await this.seminarRepository.save(seminar);
+    return result;
   }
 }
