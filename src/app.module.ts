@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { SeminarsModule } from './seminars/seminars.module';
 import { User } from './users/user.entity';
 import { Seminar } from './seminars/seminar.entity';
+import { AuthModule } from './auth/auth.module';
 import database from './config/database';
 
 @Module({
@@ -19,6 +20,7 @@ import database from './config/database';
     }),
     UsersModule,
     SeminarsModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
