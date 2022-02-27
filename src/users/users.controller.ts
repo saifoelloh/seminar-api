@@ -10,18 +10,30 @@ import {
   Patch,
   Post,
   Query,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { PaginationDto } from 'src/dto/pagination.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
 import { User } from './user.entity';
-import { encryptString } from 'src/helpers/encryption';
+import { compareEncryptionText, encryptString } from 'src/helpers/encryption';
+import { JwtGuard } from './jwt.guard';
+import { AuthService } from './auth.service';
+import { LoginDto } from './dto/login.dto';
+import { Response } from 'express';
 
 @Controller('users')
 export class UsersController {
-  constructor(readonly userService: UsersService) {}
+  constructor(
+    readonly userService: UsersService,
+    readonly authService: AuthService,
+  ) {}
 
+  @UseGuards(JwtGuard)
   @Post()
   async create(@Body() body: CreateUserDto): Promise<User> {
     const { name, email, password } = body;
@@ -50,8 +62,10 @@ export class UsersController {
     return user;
   }
 
+  @UseGuards(JwtGuard)
   @Patch(':userId')
   async updateById(
+    @Req() req,
     @Param('userId') userId: string,
     @Body() body: UpdateUserDto,
   ): Promise<void> {
@@ -73,5 +87,31 @@ export class UsersController {
     }
 
     await this.userService.deleteBy({ id: userId });
+  }
+
+  @Post('login')
+  async login(@Body() body: LoginDto, @Res() response: Response) {
+    try {
+      const user = await this.userService.findOneBy({ email: body.email });
+      const isPasswordValid = await compareEncryptionText(
+        body.password,
+        user.password,
+      );
+      if (!isPasswordValid) return new UnauthorizedException();
+
+      const token = this.authService.generateToken(user.id);
+      response.cookie('Authorization', token, {
+        maxAge: Math.pow(60, 2) * 1000,
+      });
+      response.status(200).json({ user });
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
+  }
+
+  @Post('logout')
+  logout(@Res() response: Response) {
+    response.clearCookie('Authorization');
+    response.status(200).end();
   }
 }
