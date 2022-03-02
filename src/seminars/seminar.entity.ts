@@ -5,7 +5,10 @@ import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 @Entity()
 export class Seminar extends BaseEntity {
   @Column({ type: 'varchar', length: 25, unique: true, nullable: false })
-  name: string;
+  title: string;
+
+  @Column({ type: 'text', nullable: false })
+  description: string;
 
   @Column({ type: 'date', nullable: false })
   date: Date;
@@ -16,7 +19,7 @@ export class Seminar extends BaseEntity {
   @ManyToOne(() => User, (user) => user.seminars)
   user: User;
 
-  @ManyToMany(() => User)
+  @ManyToMany(() => User, (user) => user.events)
   @JoinTable()
   attendance: User[];
 }

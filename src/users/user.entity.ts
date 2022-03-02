@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import { BeforeInsert, Column, Entity, OneToMany } from 'typeorm';
+import { BeforeInsert, Column, Entity, ManyToMany, OneToMany } from 'typeorm';
 
 import { BaseEntity } from 'src/helpers/base.entity';
 import { Seminar } from 'src/seminars/seminar.entity';
@@ -17,6 +17,9 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Seminar, (seminar) => seminar.user)
   seminars: Seminar[];
+
+  @ManyToMany(() => Seminar, (seminar) => seminar.attendance)
+  events: Seminar[];
 
   @BeforeInsert()
   async hashPassword() {
