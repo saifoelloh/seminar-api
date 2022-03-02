@@ -1,19 +1,23 @@
+import * as _ from 'lodash';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { FindManyOptions, In, Not, Repository } from 'typeorm';
+
+import { User } from 'src/users/user.entity';
 import { PaginationDto } from 'src/dto/pagination.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { User } from 'src/users/user.entity';
-import { Repository } from 'typeorm';
 import { CreateSeminarDto } from './dto/create-seminar.dto';
 import { SelectSeminarDto } from './dto/select-seminar.dto';
 import { UpdateSeminarDto } from './dto/update-seminar.dto';
 import { Seminar } from './seminar.entity';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class SeminarsService {
   constructor(
     @InjectRepository(Seminar)
     private seminarRepository: Repository<Seminar>,
+    private userService: UsersService,
   ) {}
 
   async create(data: CreateSeminarDto, user: CreateUserDto): Promise<Seminar> {
@@ -24,21 +28,49 @@ export class SeminarsService {
     return result;
   }
 
-  async findAll(paginationDto: PaginationDto<Seminar>): Promise<Seminar[]> {
-    const {
-      page = 0,
+  async findAll(
+    paginationDto?: PaginationDto<Seminar>,
+    options?: FindManyOptions<Seminar>,
+    userId?: string,
+  ): Promise<[Seminar[], number]> {
+    let page = 0,
       show = 5,
       sortBy = 'asc',
-      orderBy = 'createdAt',
-    } = paginationDto;
-    const users = await this.seminarRepository.find({
+      orderBy = 'createdAt';
+    if (!_.isEmpty(paginationDto)) {
+      const temp = JSON.parse(paginationDto as any);
+      page = temp.page;
+      show = temp.show;
+      orderBy = temp.orderBy;
+      sortBy = temp.sortBy;
+    }
+
+    let option = {};
+    if (!_.isEmpty(options)) {
+      option = JSON.parse(options as string);
+    }
+
+    let exclude = {};
+    if (!_.isEmpty(userId)) {
+      const currentUser = await this.userService.findOneBy(
+        { id: userId },
+        { relations: ['events'] },
+      );
+      const eventIds = currentUser.events.map((e) => e.id);
+      exclude = {
+        user: { id: Not(userId) },
+        id: Not(In(eventIds)),
+      };
+    }
+
+    const seminars = await this.seminarRepository.findAndCount({
       skip: page * show,
       take: show,
       order: { [orderBy]: sortBy },
-      relations: ['user'],
+      relations: ['user', 'attendance'],
+      where: { ...option, ...exclude },
     });
-
-    return users;
+    return seminars;
   }
 
   async findOneBy(conditions: SelectSeminarDto): Promise<Seminar> {

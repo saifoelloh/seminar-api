@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsString, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsObject, IsString, Max, Min } from 'class-validator';
 
 enum SortBy {
   ASC = 'ASC',
@@ -23,4 +23,10 @@ export class PaginationDto<T> {
 
   @IsEnum(SortBy)
   sortBy: SortBy = SortBy.ASC;
+}
+
+export class OptionsDto {
+  @IsObject()
+  @Type(() => Object)
+  where = {};
 }
