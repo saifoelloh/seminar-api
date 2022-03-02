@@ -25,6 +25,7 @@ import { JwtGuard } from './jwt.guard';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Response } from 'express';
+import { FindManyOptions } from 'typeorm';
 
 @Controller('users')
 export class UsersController {
@@ -33,7 +34,6 @@ export class UsersController {
     readonly authService: AuthService,
   ) {}
 
-  @UseGuards(JwtGuard)
   @Post()
   async create(@Body() body: CreateUserDto): Promise<User> {
     const { name, email, password } = body;
@@ -47,9 +47,18 @@ export class UsersController {
   }
 
   @Get()
-  async findAndCount(@Query() queries: PaginationDto<User>): Promise<User[]> {
-    const users = await this.userService.findAll(queries);
+  async findAndCount(
+    @Query('pagination') pagination: PaginationDto<User>,
+    @Query('filters') options: FindManyOptions<User>,
+  ): Promise<[User[], number]> {
+    const users = await this.userService.findAll(pagination, options);
     return users;
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('me')
+  async currentUser(@Req() req) {
+    return req.user;
   }
 
   @Get(':userId')
@@ -102,6 +111,7 @@ export class UsersController {
       const token = this.authService.generateToken(user.id);
       response.cookie('Authorization', token, {
         maxAge: Math.pow(60, 2) * 1000,
+        httpOnly: true,
       });
       response.status(200).json({ user });
     } catch (error) {
