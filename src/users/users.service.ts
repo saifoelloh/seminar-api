@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
-import { FindOneOptions, JoinOptions, Repository } from 'typeorm';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { CreateUserDto } from './dto/create-user.dto';
@@ -22,18 +22,33 @@ export class UsersService {
     return result;
   }
 
-  async findAll(paginationDto: PaginationDto<User>): Promise<User[]> {
-    const {
-      page = 0,
+  async findAll(
+    paginationDto: PaginationDto<User>,
+    options: FindManyOptions<User>,
+  ): Promise<[User[], number]> {
+    let page = 0,
       show = 5,
       sortBy = 'asc',
-      orderBy = 'createdAt',
-    } = paginationDto;
-    const users = await this.userRepository.find({
+      orderBy = 'createdAt';
+    if (!_.isEmpty(paginationDto)) {
+      const temp = JSON.parse(paginationDto as any);
+      page = temp.page;
+      show = temp.show;
+      orderBy = temp.orderBy;
+      sortBy = temp.sortBy;
+    }
+
+    let option = {};
+    if (!_.isEmpty(options)) {
+      option = JSON.parse(options as string);
+    }
+
+    const users = await this.userRepository.findAndCount({
       skip: page * show,
       take: show,
       order: { [orderBy]: sortBy },
       relations: ['seminars'],
+      ...option,
     });
 
     return users;

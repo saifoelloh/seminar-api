@@ -14,7 +14,10 @@ export class CreateSeminarDto {
 
   @IsString()
   @Length(3, 25)
-  readonly name: string;
+  readonly title: string;
+
+  @IsString()
+  readonly description: string;
 
   @IsDate()
   readonly date: Date;

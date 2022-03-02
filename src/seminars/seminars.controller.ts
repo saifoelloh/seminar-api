@@ -13,14 +13,13 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { PaginationDto } from 'src/dto/pagination.dto';
+import { OptionsDto, PaginationDto } from 'src/dto/pagination.dto';
 import { Seminar } from './seminar.entity';
 import { SeminarsService } from './seminars.service';
 import { CreateSeminarDto } from './dto/create-seminar.dto';
 import { UsersService } from 'src/users/users.service';
 import { UpdateSeminarDto } from './dto/update-seminar.dto';
 import { JwtGuard } from 'src/users/jwt.guard';
-
 @Controller('seminars')
 export class SeminarsController {
   constructor(
@@ -40,9 +39,15 @@ export class SeminarsController {
 
   @Get()
   async findAndCount(
-    @Query() queries: PaginationDto<Seminar>,
-  ): Promise<Seminar[]> {
-    const users = await this.seminarService.findAll(queries);
+    @Query('pagination') pagination?: PaginationDto<Seminar>,
+    @Query('options') options?: OptionsDto,
+    @Query('exclude') exclude?: string,
+  ): Promise<[Seminar[], number]> {
+    const users = await this.seminarService.findAll(
+      pagination,
+      options,
+      exclude,
+    );
     return users;
   }
 
